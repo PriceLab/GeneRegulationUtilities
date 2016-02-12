@@ -1,0 +1,12 @@
+Package: GeneRegulationUtilities
+Type: Package
+Title: Gene Regulation Utilties
+Version: 1.0.0
+Date: 2010-11-17
+Author: Paul Shannon
+Maintainer:  <pshannon@systemsbiology.org>
+Depends: R (>= 3.2.3)
+Suggests: RUnit
+Description:  An R package with miscellaneous functions and public data for the exploration and analysis of gene regulation
+License: GPL
+LazyLoad: yes
