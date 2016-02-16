@@ -108,8 +108,6 @@ test_360k_chr5_alzheimers_region <- function()
    printf("--- test_360k_chr5_alzheimers_region")
 
    loc <- list(chr="chr5", start=88640561, end=89001975)
-   target.tfs <- c("RREB1", "ATOH1", "POU5F2", "HLF", "SATB2")
-   target.tfs <- "ATOH1";
    target.tfs <- c("POU5F2", "SATB2", "HLF", "SOX4", "CUX2")
    tbl <- findTFsInFootprints(tbl.fpAnnotated, tbl.motifToMultipleGenes,
                               chromosome=loc$chr, startLoc=loc$start, endLoc=loc$end,
