@@ -32,10 +32,9 @@ _findSNPsInFootprints_: find the footprints which overlap with the specified SNP
                          transcriptionFactors=NA,
                          padding=0)
 
-      chr mfpStart  mfpEnd motifStart motifEnd        sequence     name     snp                                                                                                                                           tfsMatched
-    chr19  1095102 1095131    1095117  1095131 GAGGCCCAGAGGTCG MA0728.1 1095122                                                                                                                                                NR2F6
+      chr mfpStart  mfpEnd motifStart motifEnd        sequence     name     snp	tfsMatched
+    chr19  1095102 1095131    1095117  1095131 GAGGCCCAGAGGTCG MA0728.1 1095122	NR2F6
     chr19  1095630 1095657    1095630  1095643  ACTTCGCCCCCGCC MA0162.2 1095630 EGR1;EGR2;...
-
 
 Add padding to the search so that snps _near_ footprints are also retured:
 
@@ -45,7 +44,7 @@ Add padding to the search so that snps _near_ footprints are also retured:
                         transcriptionFactors=NA,
                         padding=10)
 
-      chr mfpStart  mfpEnd motifStart motifEnd        sequence     name     snp                                                                                                                                           tfsMatched
+      chr mfpStart  mfpEnd motifStart motifEnd        sequence     name     snp	tfsMatched
     chr19  1095062 1095094    1095062  1095076 CCCCCTCCCTTCCCC MA0516.1 1095102 EGR1;EGR2;...
-    chr19  1095102 1095131    1095117  1095131 GAGGCCCAGAGGTCG MA0728.1 1095122                                                                                                                                                NR2F6
+    chr19  1095102 1095131    1095117  1095131 GAGGCCCAGAGGTCG MA0728.1 1095122 NR2F6
     chr19  1095630 1095657    1095630  1095643  ACTTCGCCCCCGCC MA0162.2 1095630 EGR1;EGR2;...
