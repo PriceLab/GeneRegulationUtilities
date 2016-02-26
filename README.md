@@ -5,7 +5,7 @@ _findTFsInFootprints_: for selected transcription factors, find  DNase I footpri
 
     library(GeneRegulationUtilities)
     data(tbl.fpAnnotated)  # may take 30 seconds or so: > 4M DNAse I footprints with TF motifs
-    data(tbl.motifToMultipleGenes  # much quicker: maps motif identifiers to gene symbols (from Seth)
+    data(tbl.motifToMultipleGenes)  # much quicker: maps motif identifiers to gene symbols (from Seth)
 
     target.tfs <- c("POU5F2", "SATB2", "HLF", "SOX4", "CUX2")
     tbl.out <- findTFsInFootprints(tbl.fpAnnotated, tbl.motifToMultipleGenes, "chr5", 88640561, 89001975, target.tfs)
