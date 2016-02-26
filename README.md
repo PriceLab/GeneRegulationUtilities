@@ -53,5 +53,7 @@ Create an igv track from data/tbl.gwasADsnpsInFp.05pval.igap2013.RData
 
 ````
 data(tbl.gwasADsnpsInFp.05pval.igap2013)
+igv <- igvR()
+connected(igv)
 displayBedTable(igv, tbl.gwasADsnpsInFp[, c("chr", "snp", "snp")], "gwasFPsnps")
 ````
