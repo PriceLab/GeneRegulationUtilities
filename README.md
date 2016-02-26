@@ -48,3 +48,10 @@ Add padding to the search so that snps _near_ footprints are also retured:
     chr19  1095062 1095094    1095062  1095076 CCCCCTCCCTTCCCC MA0516.1 1095102 EGR1;EGR2;...
     chr19  1095102 1095131    1095117  1095131 GAGGCCCAGAGGTCG MA0728.1 1095122 NR2F6
     chr19  1095630 1095657    1095630  1095643  ACTTCGCCCCCGCC MA0162.2 1095630 EGR1;EGR2;...
+
+Create an igv track from data/tbl.gwasADsnpsInFp.05pval.igap2013.RData
+
+````
+data(tbl.gwasADsnpsInFp.05pval.igap2013)
+displayBedTable(igv, tbl.gwasADsnpsInFp[, c("chr", "snp", "snp")], "gwasFPsnps")
+````
