@@ -1,8 +1,8 @@
 Package: GeneRegulationUtilities
 Type: Package
 Title: Gene Regulation Utilties
-Version: 1.0.7
-Date: 2016-02-25
+Version: 1.0.8
+Date: 2016-03-02
 Author: Paul Shannon
 Maintainer:  <pshannon@systemsbiology.org>
 Depends: R (>= 3.2.3),  GenomicRanges
