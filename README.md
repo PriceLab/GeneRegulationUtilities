@@ -1,4 +1,4 @@
-# GeneRegulationUtilities
+# snpFoot
 An R package with miscellaneous functions and public data for the exploration and analysis of gene regulation
 
 _findTFsInFootprints_: for selected transcription factors, find  DNase I footprints in which they may bind
