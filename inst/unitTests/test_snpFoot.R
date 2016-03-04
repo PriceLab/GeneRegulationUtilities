@@ -1,15 +1,16 @@
 library(RUnit)
-library(GeneRegulationUtilities);
+library(snpFoot);
+library(PrivateCoryData)
 #------------------------------------------------------------------------------------------------------------------------
 printf <- function(...) print(noquote(sprintf(...)))
 #------------------------------------------------------------------------------------------------------------------------
 if(!exists("tbl.fpAnnotated")){
-   printf("loading tbl.fpAnnotated from GeneRegulationUtilities package...")
+   printf("loading tbl.fpAnnotated from PrivateCoryData package...")
    data(tbl.fpAnnotated)
    }
 
 if(!exists("tbl.motifToMultipleGenes")){
-   printf("loading tbl.motifToMultipleGenes from GeneRegulationUtilities package...")
+   printf("loading tbl.motifToMultipleGenes from PrivateCoryData package...")
    data(tbl.motifToMultipleGenes)
    }
 #------------------------------------------------------------------------------------------------------------------------
@@ -274,7 +275,7 @@ test_LXH1_matching <- function()
 explore_abca7_snps <- function()
 {
     printf("--- explore_abca7_snps")
-    f <- system.file(package="GeneRegulationUtilities", "extdata", "abca7-associated-snps-1kg.tsv")
+    f <- system.file(package="PrivateCoryData", "data", "abca7-associated-snps-1kg.tsv")
     stopifnot(file.exists(f))
     tbl.snps <- read.table(f, header=FALSE, sep="\t", as.is=TRUE)
     colnames(tbl.snps) <- c("chrom", "loc")

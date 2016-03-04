@@ -1,6 +1,6 @@
-Package: GeneRegulationUtilities
+Package: snpFoot
 Type: Package
-Title: Gene Regulation Utilties
+Title: snpFoot
 Version: 1.0.8
 Date: 2016-03-02
 Author: Paul Shannon
