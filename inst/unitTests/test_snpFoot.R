@@ -9,6 +9,11 @@ if(!exists("tbl.fpAnnotated")){
    data(tbl.fpAnnotated)
    }
 
+if(!exists("tbl.fpAnnotated")){
+   printf("loading tbl.fpAnnotated from PrivateCoryData package...")
+   data(tbl.fpAnnotated)
+   }
+
 if(!exists("tbl.motifToMultipleGenes")){
    printf("loading tbl.motifToMultipleGenes from PrivateCoryData package...")
    data(tbl.motifToMultipleGenes)
@@ -23,6 +28,7 @@ runTests <- function()
    test_findSNPsInFootprints()
    test_findSNPsNearFootprints()
    test_LXH1_matching()
+   #test_snpFootDisplay()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -36,7 +42,7 @@ test_1_footprint_SAT2B_tf <- function()
 {
   printf("--- test_1_footprint_SAT2B_tf")
 
-  loc <- tbl.fpAnnotated[grep("MA0679", tbl.fpAnnotated$name)[1], c("chr", "mfpStart", "mfpEnd")]
+  loc <- tbl.fpAnnotated[grep("MA0679", tbl.fpAnnotated$motifName)[1], c("chr", "mfpStart", "mfpEnd")]
   target.tf <- "SATB2"
   tbl <- findTFsInFootprints(tbl.fpAnnotated, tbl.motifToMultipleGenes,
                              chromosome=loc$chr, startLoc=loc$mfpStart, endLoc=loc$mfpEnd,
@@ -47,7 +53,7 @@ test_1_footprint_SAT2B_tf <- function()
 
   checkEquals(dim(tbl), c(3, 18))
   checkEquals(tbl$tfsMatched, rep("SATB2", 3))
-  checkEquals(tbl$name, c("MA0679.1", "MA0756.1", "MA0757.1"))
+  checkEquals(tbl$motifName, c("MA0679.1", "MA0756.1", "MA0757.1"))
 
 } # test_1_footprint_SAT2B_tf
 #------------------------------------------------------------------------------------------------------------------------
@@ -55,7 +61,7 @@ test_1_footprint_two_tfs <- function()
 {
   printf("--- test_1_footprint_two_tfs")
 
-  loc <- tbl.fpAnnotated[grep("MA0679", tbl.fpAnnotated$name)[1], c("chr", "mfpStart", "mfpEnd")]
+  loc <- tbl.fpAnnotated[grep("MA0679", tbl.fpAnnotated$motifName)[1], c("chr", "mfpStart", "mfpEnd")]
   target.tf <- c("SATB2", "CUX1")
   tbl <- findTFsInFootprints(tbl.fpAnnotated, tbl.motifToMultipleGenes,
                              chromosome=loc$chr, startLoc=loc$mfpStart, endLoc=loc$mfpEnd,
@@ -66,7 +72,7 @@ test_1_footprint_two_tfs <- function()
 
   checkEquals(dim(tbl), c(3, 18))
   checkEquals(tbl$tfsMatched, rep("SATB2;CUX1", 3))
-  checkEquals(tbl$name, c("MA0679.1", "MA0756.1", "MA0757.1"))
+  checkEquals(tbl$motifName, c("MA0679.1", "MA0756.1", "MA0757.1"))
 
 } # test_1_footprint_two_tfs
 #------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +91,7 @@ test_emptyResults <- function()
 
       # now repeat the SATB2 search (see above) with locs just 1 base too small, by incrementing start
 
-   loc <- tbl.fpAnnotated[grep("MA0679", tbl.fpAnnotated$name)[1], c("chr", "motifStart", "motifEnd")]
+   loc <- tbl.fpAnnotated[grep("MA0679", tbl.fpAnnotated$motifName)[1], c("chr", "motifStart", "motifEnd")]
    loc.orig <- loc
    loc$motifStart <- loc$motifStart + 1
    target.tf <- "SATB2"
@@ -160,7 +166,7 @@ test_findSNPsInFootprints <- function()
    checkEquals(x$motifStart, 88899109)
    checkEquals(x$motifEnd, 88899120)
    checkEquals(x$sequence, "AAAGTTCAAAGC")
-   checkEquals(x$name, "MA0769.1")
+   checkEquals(x$motifName, "MA0769.1")
    checkEquals(x$snp, 88899133)
    checkEquals(x$tfsMatched, "TCF7")
 
@@ -292,4 +298,37 @@ explore_abca7_snps <- function()
                                padding=10)
 
 } # explore_abca7_snps
+#------------------------------------------------------------------------------------------------------------------------
+test_snpFootDisplay <- function()
+{
+   printf("--- test_snpFootDisplay")
+   if(!exists("igv"))
+      igv <- igvR()
+
+   checkTrue(connected(igv))
+
+   #snpFootDisplay("chr5", start.loc, end.loc, genome="hg38")
+
+   vcfDirectory <- system.file(package="igvR", "extdata", "vcf")
+   vcfFile <- file.path(vcfDirectory, "chr22-sub.vcf.gz")
+   tbifile <- file.path(vcfDirectory, "chr22-sub.vcf.gz.tbi")
+
+   checkTrue(file.exists(vcfFile))
+   checkTrue(file.exists(tbiFile))
+
+   checkTrue(connected(igv))
+
+   samples.01 <- c("HG00096", "HG00097", "HG00099")
+   samples.02 <- c("HG00100", "HG00101")
+
+   start.loc <- 49902169
+   end.loc <- 49920831
+
+   goto(igv, "chr22", start.loc, end.loc)
+   displayVcfRegion(igv, "chr22", start.loc, end.loc, vcfFile, sampleIDs=samples.01)
+   displayVcfRegion(igv, "chr22", start.loc, end.loc, vcfFile,  sampleIDs=samples.02)
+   displayVcfRegion(igv, "chr22", start.loc, end.loc, vcfFile)
+
+
+} # test_snpFootDisplay
 #------------------------------------------------------------------------------------------------------------------------

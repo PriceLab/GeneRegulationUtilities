@@ -22,18 +22,19 @@ findTFsInFootprints <- function(tbl.fp, tbl.motifToGenes, chromosome, startLoc, 
     if(all(is.na(transcriptionFactors)))
         transcriptionFactors <- sort(unique(tbl.motifToGenes$tfs))
 
+    stopifnot(all(c("chr", "mfpStart", "mfpEnd", "motifName") %in% colnames(tbl.fp)))
+
     tbl.sub <- subset(tbl.fp, chr==chromosome & mfpStart >= startLoc & mfpEnd <= endLoc)
-    motifs.per.fp <- tbl.sub$name
+    motifs.per.fp <- tbl.sub$motifName
     tbl.hits <- subset(tbl.motifToGenes, motif %in% motifs.per.fp)
     indicesMatched <- match(transcriptionFactors, tbl.hits$tfs)
     tbl.hitAndMatched <- subset(tbl.hits, tfs %in% transcriptionFactors)
     motifs <- unique(tbl.hitAndMatched$motif)
-    tbl.sub <- subset(tbl.sub, name %in% motifs)
+    tbl.sub <- subset(tbl.sub, motifName %in% motifs)
 
-    #browser()
     tfs.per.motif <- lapply(motifs, function(m) subset(tbl.hitAndMatched, motif==m)$tfs)
     names(tfs.per.motif) <- motifs
-    tfsPerRow <- unlist(lapply(tbl.sub$name, function(motifName)
+    tfsPerRow <- unlist(lapply(tbl.sub$motifName, function(motifName)
         paste(intersect(transcriptionFactors, subset(tbl.motifToGenes, motif==motifName)$tfs), collapse=";")))
     tbl.augmented <- cbind(tbl.sub, tfsMatched=tfsPerRow, stringsAsFactors=FALSE)
 
@@ -83,7 +84,6 @@ findSNPsInFootprints <- function(tbl.fp, tbl.motifToGenes,
     tbl.fpSub <- findTFsInFootprints(tbl.fp, tbl.motifToGenes,
                                      chromosome, region.startLoc, region.endLoc,
                                      transcriptionFactors)
-    #browser()
     if(nrow(tbl.fpSub) == 0)
         return(data.frame())
 
@@ -97,12 +97,12 @@ findSNPsInFootprints <- function(tbl.fp, tbl.motifToGenes,
     tbl.fpSub$snp <- snp
     result <- subset(tbl.fpSub, snp != -1)
     #browser()
-    result[, c("chr", "mfpStart", "mfpEnd", "motifStart", "motifEnd", "sequence", "name", "snp", "tfsMatched")]
+    result[, c("chr", "mfpStart", "mfpEnd", "motifStart", "motifEnd", "sequence", "motifName", "snp", "tfsMatched")]
 
 } # findTFsInFootprints
 #------------------------------------------------------------------------------------------------------------------------
 # me2fc upstream mariette-reported snps in footprints
-#    seqnames    start      end width strand      name score seqnames.1  start.1    end.1 width.1 strand.1
+#    seqnames    start      end width strand motifName score seqnames.1  start.1    end.1 width.1 strand.1
 # 1      chr5 88669200 88669211    12      -  MA0486.2  50.7       chr5 88669204 88669204       1        *
 # 2      chr5 88669200 88669211    12      -  MA0771.1  50.1       chr5 88669204 88669204       1        *
 # 3      chr5 88884580 88884599    20      -  MA0528.1  56.3       chr5 88884588 88884588       1        *
