@@ -1,13 +1,5 @@
-library(snpFoot)
-library(hash)
-library(TReNA)
-library(PrivateCoryData)
-library(igvR)
 #------------------------------------------------------------------------------------------------------------------------
-if(!exists("igv"))
-    igv <- igvR()
-#------------------------------------------------------------------------------------------------------------------------
-TF_grabber<-function(genelist,trn.list,label=NULL,promoterDist=1000000)
+tfGrabber<-function(genelist,trn.list,label=NULL,promoterDist=1000000)
 {
    printf(" --- entering TF_grabber for %s", label)
 
@@ -170,7 +162,7 @@ run <- function()
       promoterDistance <- 10000
       printf("calling TF_grabber for '%s': %d genes, trn of dimension %d, %d, promoterDistance: %d",
              short.name, length(genes.of.interest), nrow(trn.rtrim), ncol(trn.rtrim), promoterDistance)
-      time.info <- system.time(x <- TF_grabber(genes.of.interest, list(trn.rtrim), label=short.name, promoterDist=promoterDistance))
+      time.info <- system.time(x <- tfGrabber(genes.of.interest, list(trn.rtrim), label=short.name, promoterDist=promoterDistance))
       output.filename <- sprintf("%s.%d-dist.%d-genes.results.RData", short.name, promoterDistance,
                                  length(genes.of.interest))
       printf("%10s: %10.2f seconds.  writing %d footprints on %d chromosomes to %s",
