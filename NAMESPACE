@@ -1,6 +1,5 @@
 export(
     findTFsInFootprints,
     findSNPsInFootprints,
-    snpFootDisplay,
     tfGrabber
 )
