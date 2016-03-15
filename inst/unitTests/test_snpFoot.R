@@ -28,7 +28,8 @@ runTests <- function()
    test_findSNPsInFootprints()
    test_findSNPsNearFootprints()
    test_LXH1_matching()
-   #test_snpFootDisplay()
+   test_tfGrabber()
+     #test_snpFootDisplay()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -331,4 +332,23 @@ test_snpFootDisplay <- function()
 
 
 } # test_snpFootDisplay
+#------------------------------------------------------------------------------------------------------------------------
+test_tfGrabber <- function()
+{
+   printf("--- test_tfGrabber")
+   dir <- system.file(package="snpFoot", "extdata")
+   checkTrue(file.exists(dir))
+   file <- "demoTRN.RData"
+   full.path <- file.path(dir, file)
+   checkTrue(file.exists(full.path))
+   var.names <- load(full.path, envir=.GlobalEnv)
+   var.name.trn.rtrim <- grep("^trn.rtrim", var.names, value=TRUE)
+   eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
+   genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1"))
+   promoterDistance <- 10000
+   time.info <- system.time(x <- tfGrabber(genes.of.interest, list(trn.rtrim),
+                                           label="demo", promoterDist=promoterDistance))
+   checkTrue(nrow(x$bed4igv) >= 10)
+
+} # test_tfGrabber
 #------------------------------------------------------------------------------------------------------------------------
