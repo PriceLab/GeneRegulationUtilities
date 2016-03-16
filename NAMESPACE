@@ -1,5 +1,6 @@
 export(
     findTFsInFootprints,
     findSNPsInFootprints,
-    tfGrabber
-)
+    tfGrabber,
+    tfGrabber1
+    )

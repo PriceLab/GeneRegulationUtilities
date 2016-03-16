@@ -333,6 +333,7 @@ test_snpFootDisplay <- function()
 
 } # test_snpFootDisplay
 #------------------------------------------------------------------------------------------------------------------------
+# "ITGA2B" is a problematic gene in /Volumes/local/Cory/for_Hongdong/trn.rtrim_isb_all.RData
 test_tfGrabber <- function()
 {
    printf("--- test_tfGrabber")
@@ -346,9 +347,43 @@ test_tfGrabber <- function()
    eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
    genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1"))
    promoterDistance <- 10000
-   time.info <- system.time(x <- tfGrabber(genes.of.interest, list(trn.rtrim),
-                                           label="demo", promoterDist=promoterDistance))
+
+   time.info <- system.time(x <- tfGrabber1(genes.of.interest, trn.rtrim,
+                                            label="demo", promoterDist=promoterDistance))
    checkTrue(nrow(x$bed4igv) >= 10)
+   checkEquals(length(x$TRN), length(genes.of.interest))
 
 } # test_tfGrabber
+#------------------------------------------------------------------------------------------------------------------------
+# "ITGA2B" is a problematic gene in /Volumes/local/Cory/for_Hongdong/trn.rtrim_isb_all.RData
+test_tfGrabber.fullTRN <- function()
+{
+   printf("--- test_tfGrabber.fullTRN")
+   dir <- "/Volumes/local/Cory/for_Hongdong"
+   filename <- "trn.rtrim_isb_all.RData"
+   full.path <- file.path(dir, filename)
+
+   if(!file.exists(full.path)){
+      warning(sprintf("skipping fullTRN test, remote file not available: %s", full.path))
+      return(FALSE)
+      }
+
+   short.name <- sub(".RData", "", sub("^trn.rtrim_", "", filename))
+   var.names <- load(full.path, envir=.GlobalEnv)
+   var.name.trn.rtrim <- grep("^trn.rtrim", var.names, value=TRUE)
+   eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
+   genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1", "ITGA2B"))
+   genes.of.interest <- rownames(trn.rtrim)
+   promoterDistance <- 10000
+
+   printf("calling TF_grabber1 for '%s': %d genes, trn of dimension %d, %d, promoterDistance: %d",
+          short.name, length(genes.of.interest), nrow(trn.rtrim), ncol(trn.rtrim), promoterDistance)
+
+   time.info <- system.time(x <- tfGrabber1(genes.of.interest, trn.rtrim,
+                                            label="demo", promoterDist=promoterDistance))
+
+   browser()
+   zz <- 99
+
+} # test_tfGrabber.fullTRN
 #------------------------------------------------------------------------------------------------------------------------
