@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------------------------------------------------
-tfGrabber1<-function(genelist,inputTRN,label=NULL,promoterDist=1000000, threshold=0.01)
+tfGrabber1<-function(genelist,inputTRN,trnName=NULL,promoterDist=1000000, threshold=0.01)
 {
    # input paras:
    # gene list: a vector of genes such as MEF2C, ABCA7, CLU. In the format of RefSeq gene symbol
@@ -16,8 +16,8 @@ tfGrabber1<-function(genelist,inputTRN,label=NULL,promoterDist=1000000, threshol
   if (!exists("tbl.fpAnnotated")){data(tbl.fpAnnotated)}
   if (!exists("humangene")) {data(tbl.humangene3877)}
 
-  #label of each TRN
-  if (is.null(label)){label="trn"}
+  #trnName of each TRN
+  if (is.null(trnName)){trnName="trn"}
 
   # all TFs
   alltfs=colnames(inputTRN)
@@ -37,7 +37,7 @@ tfGrabber1<-function(genelist,inputTRN,label=NULL,promoterDist=1000000, threshol
     potential.regulator.count <- length(singleTRN)
     keepCols=which(abs(singleTRN)>threshold)     # keep only TFs with absolute coefficients above threshold
     singleTRN=singleTRN[keepCols]
-    printf("--- %s %d) %8s regulators above threshold %d/%d", label, count, gene,  length(singleTRN), potential.regulator.count)
+    printf("--- %s %d) %8s regulators above threshold %d/%d", trnName, count, gene,  length(singleTRN), potential.regulator.count)
     # sumTRN == singleTRN in thse case of input is only one TRN
     sumTRN=singleTRN
 
@@ -58,7 +58,7 @@ tfGrabber1<-function(genelist,inputTRN,label=NULL,promoterDist=1000000, threshol
          thismotif=tbl.thisgene[i,"motifName"]
          itfs=subset(imotifs,motif==thismotif)
          info.string <- "<html>";
-         gene.motif <- sprintf("%s:&nbsp;%s", gene, thismotif)
+         gene.motif <- sprintf("%s(%s):&nbsp;%s", gene, trnName, thismotif)
          info.string <- paste(info.string, gene.motif, sep="")
          for (j in 1:nrow(itfs)){
             tf.info <- sprintf("<br>%s:&nbsp;%04.2f", itfs[j, "tfs"], sumTRN[itfs[j,"tfs"]])
