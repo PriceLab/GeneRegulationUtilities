@@ -62,6 +62,7 @@ tfGrabber1<-function(genelist,inputTRN,label=NULL,promoterDist=1000000, threshol
          info.string <- paste(info.string, gene.motif, sep="")
          for (j in 1:nrow(itfs)){
             tf.info <- sprintf("<br>%s:&nbsp;%04.2f", itfs[j, "tfs"], sumTRN[itfs[j,"tfs"]])
+            info.string <- paste(info.string, tf.info, sep="")
             }
          info.string <- paste(info.string, "</html>", sep="")
          tbl.thisgene[i,"name"]=info.string
