@@ -1,6 +1,7 @@
 library(RUnit)
 library(snpFoot);
 library(PrivateCoryData)
+library(igvR)
 #------------------------------------------------------------------------------------------------------------------------
 printf <- function(...) print(noquote(sprintf(...)))
 #------------------------------------------------------------------------------------------------------------------------
@@ -348,42 +349,100 @@ test_tfGrabber <- function()
    genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1"))
    promoterDistance <- 10000
 
-   time.info <- system.time(x <- tfGrabber1(genes.of.interest, trn.rtrim,
-                                            label="demo", promoterDist=promoterDistance))
+   time.info <- system.time(x <- tfGrabber(genes.of.interest, trn.rtrim,
+                                           trnName="demo", promoterDist=promoterDistance))
    checkTrue(nrow(x$bed4igv) >= 10)
    checkEquals(length(x$TRN), length(genes.of.interest))
 
 } # test_tfGrabber
 #------------------------------------------------------------------------------------------------------------------------
-# "ITGA2B" is a problematic gene in /Volumes/local/Cory/for_Hongdong/trn.rtrim_isb_all.RData
-test_tfGrabber.fullTRN <- function()
+test_intersectingLocs <- function()
 {
-   printf("--- test_tfGrabber.fullTRN")
-   dir <- "/Volumes/local/Cory/for_Hongdong"
-   filename <- "trn.rtrim_isb_all.RData"
-   full.path <- file.path(dir, filename)
+   printf("--- test_intersectingLocs")
 
-   if(!file.exists(full.path)){
-      warning(sprintf("skipping fullTRN test, remote file not available: %s", full.path))
-      return(FALSE)
-      }
+   chrom <- "chr1"
+   tbl.bed <- data.frame(chrom=chrom, start=1, end=10, stringsAsFactors=FALSE)
+   loc.good <- 6
+   loc.bad  <- 16
+   checkEquals(intersectingLocs(tbl.bed, chrom, loc.good), loc.good)
+   checkEquals(intersectingLocs(tbl.bed, chrom, loc.bad), numeric(0))
+   checkEquals(intersectingLocs(tbl.bed, chrom, loc.bad, padding=10), loc.bad)
 
-   short.name <- sub(".RData", "", sub("^trn.rtrim_", "", filename))
-   var.names <- load(full.path, envir=.GlobalEnv)
-   var.name.trn.rtrim <- grep("^trn.rtrim", var.names, value=TRUE)
-   eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
-   genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1", "ITGA2B"))
-   genes.of.interest <- rownames(trn.rtrim)
-   promoterDistance <- 10000
+} # test_intersectingLocs
+#------------------------------------------------------------------------------------------------------------------------
+test_displayGWAS <- function()
+{
+   checkTrue(exists("tbl.gwas"))
+   if(!exists("igv"))
+       igv <<- igvR()
 
-   printf("calling TF_grabber1 for '%s': %d genes, trn of dimension %d, %d, promoterDistance: %d",
-          short.name, length(genes.of.interest), nrow(trn.rtrim), ncol(trn.rtrim), promoterDistance)
+   displayGWASTable(igv, tbl.gwas, "ADgwas2013")
 
-   time.info <- system.time(x <- tfGrabber1(genes.of.interest, trn.rtrim,
-                                            label="demo", promoterDist=promoterDistance))
+} # test_displayGWAS
+#------------------------------------------------------------------------------------------------------------------------
+test_displaySnpsInFootprints <- function()
+{
+   printf("--- test_displaySnpsInFootprints")
+   file <- system.file(package="PrivateCoryData", "extdata", "trn10.genes44",
+                       "isb_all_cer.1000000-dist.44-genes.results.bed.RData")
+   checkTrue(file.exists(file))
+   load(file)
 
-   browser()
-   zz <- 99
+   if(!exists("igv"))
+      igv <<- igvR()
 
-} # test_tfGrabber.fullTRN
+   checkTrue(connected(igv))
+   displayBedTable(igv, tbl.out, "isb_all")
+   squishTrack(igv, "isb_all.bed")
+
+} # test_displaySnpsInFootprints
+#------------------------------------------------------------------------------------------------------------------------
+test_intersectMarietSnpsWithGWAS <- function()
+{
+   printf("--- test_intersectMarietSnpsWithGWAS")
+
+   if(!exists("igv"))
+      igv <<- igvR()
+
+   checkTrue(connected(igv))
+
+     # first, display all mariette snps
+
+   file <- system.file(package="PrivateCoryData", "extdata", "mef2c-related-snps-from-mariette.tsv")
+   checkTrue(file.exists(file))
+   tbl.mariette <- read.table(file, sep="\t", header=TRUE, as.is=TRUE)
+   mariette.snps <- tbl.mariette$BP
+   displaySnps(igv, "chr5", mariette.snps, "mariette.snps")
+   goto(igv, "chr5", 87850803, 88515362)
+
+     # now load all the footprints from 10trns, 44 genes
+   file <- system.file(package="PrivateCoryData", "extdata", "trn10.genes44", "44genes-10trns-bedTable.RData")
+   checkTrue(file.exists(file))
+   load(file)   # it's called tbl.out, with almost 18k rows
+   displayBedTable(igv, tbl.out, "44genes.10trns")  # igv will ask if you want to create an index.  say yes
+   squishTrack(igv, "44genes.10trns.bed")
+
+      # create a track of intersection of gwas snps with 44genes.10trns footprints
+   gwas.chr5.snps <- subset(tbl.gwas, CHR=="chr5")$BP
+   gwas.chr5.snps.in.fp <- intersectingLocs(tbl.out, "chr5", gwas.chr5.snps, padding=10)  # just two
+   displaySnps(igv, "chr5", gwas.chr5.snps.in.fp, "gwas.sps.in.fp")
+
+      # now do the same with mariette snps
+   mariette.snps.in.or.near.fp <- intersectingLocs(tbl.out, "chr5", mariette.snps, padding=50)  # also just two
+   displaySnps(igv, "chr5", mariette.snps.in.or.near.fp, "mariette.sps.in.fp")
+
+} # test_intersectMarietSnpsWithGWAS
+#------------------------------------------------------------------------------------------------------------------------
+test_displayAllEncodeFootprints <- function()
+{
+   print("--- test_displayAllEncodeFootprints")
+
+   if(!exists("igv"))
+      igv <<- igvR()
+
+   checkTrue(exists("tbl.fpAnnotated"))
+   tbl.chr5 <- subset(tbl.fpAnnotated, chr=="chr5")
+   displayBedTable(igv, tbl.chr5[, c("chr", "mfpStart", "mfpEnd", "motifName")], "from.encode")
+
+} # test_displayAllEncodeFootprints
 #------------------------------------------------------------------------------------------------------------------------
