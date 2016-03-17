@@ -30,7 +30,11 @@ runTests <- function()
    test_findSNPsNearFootprints()
    test_LXH1_matching()
    test_tfGrabber()
-     #test_snpFootDisplay()
+   test_tfGrabber()
+   test_intersectingLocs()
+   test_displayGWAS()
+   test_intersectMarietSnpsWithGWAS()
+   test_displayAllEncodeFootprints()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -380,23 +384,6 @@ test_displayGWAS <- function()
 
 } # test_displayGWAS
 #------------------------------------------------------------------------------------------------------------------------
-test_displaySnpsInFootprints <- function()
-{
-   printf("--- test_displaySnpsInFootprints")
-   file <- system.file(package="PrivateCoryData", "extdata", "trn10.genes44",
-                       "isb_all_cer.1000000-dist.44-genes.results.bed.RData")
-   checkTrue(file.exists(file))
-   load(file)
-
-   if(!exists("igv"))
-      igv <<- igvR()
-
-   checkTrue(connected(igv))
-   displayBedTable(igv, tbl.out, "isb_all")
-   squishTrack(igv, "isb_all.bed")
-
-} # test_displaySnpsInFootprints
-#------------------------------------------------------------------------------------------------------------------------
 test_intersectMarietSnpsWithGWAS <- function()
 {
    printf("--- test_intersectMarietSnpsWithGWAS")
@@ -435,7 +422,7 @@ test_intersectMarietSnpsWithGWAS <- function()
 #------------------------------------------------------------------------------------------------------------------------
 test_displayAllEncodeFootprints <- function()
 {
-   print("--- test_displayAllEncodeFootprints")
+   printf("--- test_displayAllEncodeFootprints")
 
    if(!exists("igv"))
       igv <<- igvR()
