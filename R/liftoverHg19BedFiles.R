@@ -9,6 +9,20 @@ liftoverBedFile.19.38 <- function(filename)
 {
    tbl <- read.table(filename, sep="\t", as.is=TRUE)
 
+     # some minimal sanity checks:  chrX or chromX or  X values in 1st column
+
+   chromValues <- sort(unique(sub("^chr", "", tbl[,1])))
+   chromValues <- sub("^chrom", "", chromValues)
+   chromValues <- toupper(chromValues)
+   expected.chrom.values <- all(chromValues %in% as.character(c(1:22, "X", "Y", "M")))
+   if(!expected.chrom.values)
+      stop(sprintf("unexpected chromosome names in input bed file: %s", paste(chromValues, collapse=",")))
+
+     # all numeric in second and third columsn
+
+   stopifnot(all(is.numeric(tbl[,2])))
+   stopifnot(all(is.numeric(tbl[,3])))
+
    if(ncol(tbl) == 3)
        colnames(tbl) <- c("chrom", "start", "end")
 
