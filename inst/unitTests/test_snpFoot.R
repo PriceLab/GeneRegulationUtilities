@@ -30,11 +30,11 @@ runTests <- function()
    test_findSNPsNearFootprints()
    test_LXH1_matching()
    test_tfGrabber()
-   test_tfGrabber()
    test_intersectingLocs()
    test_displayGWAS()
    test_intersectMarietSnpsWithGWAS()
    test_displayAllEncodeFootprints()
+   test_runLift.hg19to38()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -376,11 +376,13 @@ test_intersectingLocs <- function()
 #------------------------------------------------------------------------------------------------------------------------
 test_displayGWAS <- function()
 {
+   printf("--- test_displayGWAS")
+
    checkTrue(exists("tbl.gwas"))
    if(!exists("igv"))
-       igv <<- igvR()
+       return(FALSE)
 
-   displayGWASTable(igv, tbl.gwas, "ADgwas2013")
+    displayGWASTable(igv, tbl.gwas, "ADgwas2013")
 
 } # test_displayGWAS
 #------------------------------------------------------------------------------------------------------------------------
@@ -389,9 +391,7 @@ test_intersectMarietSnpsWithGWAS <- function()
    printf("--- test_intersectMarietSnpsWithGWAS")
 
    if(!exists("igv"))
-      igv <<- igvR()
-
-   checkTrue(connected(igv))
+       return(FALSE)
 
      # first, display all mariette snps
 
@@ -425,11 +425,36 @@ test_displayAllEncodeFootprints <- function()
    printf("--- test_displayAllEncodeFootprints")
 
    if(!exists("igv"))
-      igv <<- igvR()
+      return()
 
    checkTrue(exists("tbl.fpAnnotated"))
    tbl.chr5 <- subset(tbl.fpAnnotated, chr=="chr5")
    displayBedTable(igv, tbl.chr5[, c("chr", "mfpStart", "mfpEnd", "motifName")], "from.encode")
 
 } # test_displayAllEncodeFootprints
+#------------------------------------------------------------------------------------------------------------------------
+test_runLift.hg19to38 <- function()
+{
+    printf("--- test_runLift.hg19to38")
+
+    small.bed.file <- system.file(package="PrivateCoryData", "extdata/elizabethBlue/chr1_CU0039F.shared.bed")
+
+    expected.output.file <- "./chr1_CU0039F.shared.hg38.bed"
+    if(file.exists("expected.output.file"))
+       unlink(expected.output.file)
+
+    runLift.hg19to38(small.bed.file)
+    checkTrue(file.exists(expected.output.file))
+    tbl <- read.table(expected.output.file, sep="\t", as.is=TRUE)
+    checkEquals(dim(tbl), c(30, 4))
+    checkEquals(tbl[1,1], "chr1")
+    checkEquals(tbl[1,2], 172863016)
+    checkEquals(tbl[1,3], 172863016)
+    checkEquals(tbl[1,4], "1:172832156")
+
+    if(file.exists("expected.output.file"))
+       unlink(expected.output.file)
+
+
+} # test_runLift.hg19to38
 #------------------------------------------------------------------------------------------------------------------------

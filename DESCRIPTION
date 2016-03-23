@@ -1,11 +1,11 @@
 Package: snpFoot
 Type: Package
 Title: snpFoot
-Version: 1.0.24
-Date: 2016-03-22
+Version: 1.0.26
+Date: 2016-03-23
 Author: Paul Shannon
 Maintainer:  <pshannon@systemsbiology.org>
-Depends: R (>= 3.2.3),  GenomicRanges, PrivateCoryData, igvR, VariantAnnotation
+Depends: R (>= 3.2.3),  GenomicRanges, PrivateCoryData, igvR, VariantAnnotation, rtracklayer (>= 1.30.3)
 Suggests: RUnit
 Description:  An R package with miscellaneous functions and public data for the exploration and analysis of gene regulation
 License: GPL
