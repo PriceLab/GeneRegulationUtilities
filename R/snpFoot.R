@@ -196,7 +196,7 @@ tfGrabber.new <- function(gene, inputTRN, trnName, promoterDist)
       }
 
    if(!gene %in% rownames(inputTRN)){
-      warning(sprintf("gene '%s' not in TRN model '%s'", gene, trnName))
+      printf("gene '%s' not in TRN model '%s'", gene, trnName)
       return(data.frame())
       }
 
@@ -204,13 +204,20 @@ tfGrabber.new <- function(gene, inputTRN, trnName, promoterDist)
    start <- loc.info$start - promoterDist; if(start < 1) start <- 1
    end <- start + promoterDist
    chrom <- as.character(loc.info$chrom)
+
    if(!grepl("^chr", chrom))
       chrom <- sprintf("chr", chrom)
+
+   if(nchar(chrom) > 5){
+      printf("unexpected chromosome name for %s: %s, skipping", gene, chrom)
+      return(data.frame())
+      }
+
    printf("chromosome for %s: %s", gene, chrom)
 
    tbl.sub <- subset(tbls.fp[[chrom]], mfpStart >= start & mfpEnd <= end)
    if(nrow(tbl.sub) == 0){
-      warning(sprintf("no footprints found in region %s:%d-%d", chrom, start, end))
+      printf("no footprints found in region %s:%d-%d", chrom, start, end)
       return(data.frame())
       }
 
