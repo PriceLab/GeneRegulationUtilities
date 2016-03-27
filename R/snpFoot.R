@@ -204,6 +204,9 @@ tfGrabber.new <- function(gene, inputTRN, trnName, promoterDist)
    start <- loc.info$start - promoterDist; if(start < 1) start <- 1
    end <- start + promoterDist
    chrom <- as.character(loc.info$chrom)
+   if(!grepl("^chr", chrom))
+      chrom <- sprintf("chr", chrom)
+   printf("chromosome for %s: %s", gene, chrom)
 
    tbl.sub <- subset(tbls.fp[[chrom]], mfpStart >= start & mfpEnd <= end)
    if(nrow(tbl.sub) == 0){
