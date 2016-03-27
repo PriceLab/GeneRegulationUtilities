@@ -14,5 +14,9 @@ printf <- function(...) print(noquote(sprintf(...)))
 
    printf("   loading tbl.gwas.level_1 AD, igap 2013")
    data(tbl.gwas.level_1)
-}
+
+   printf("   loading tbl.humangene3877")
+   data(tbl.humangene3877)
+
+} # .onLoad
 #------------------------------------------------------------------------------------------------------------------------

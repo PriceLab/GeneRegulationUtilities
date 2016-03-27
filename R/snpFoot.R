@@ -174,83 +174,150 @@ combineBedTables <- function(filenames)
 
 } # combineBedTables
 #------------------------------------------------------------------------------------------------------------------------
+run.tfGrabber <- function(genes, trn, trnName, sqlite.fileName, sql.tableName)
+{
+   x <- lapply(genes, function(gene) tfGrabber.new(gene, trn, trnName="demo", promoterDist=1e6))
+   lapply(x, length)
+   tbl.fp <- do.call("rbind", x)
+   dim(tbl.fp) # [1] 8470   23
+   table(tbl.fp$gene)
+   db <- dbConnect(dbDriver("SQLite"), sqlite.fileName)
+   dbWriteTable(db, sql.tableName, tbl.fp, append=TRUE)
+   dbDisconnect(db)
+
+} # run.tfGrabber
+#------------------------------------------------------------------------------------------------------------------------
+tfGrabber.new <- function(gene, inputTRN, trnName, promoterDist)
+{
+   if(!exists("tbls.fp")) {
+      printf("splitting tbl.fpAnnotated into chromosome-specific tables...")
+      tbls.fp <<- split(tbl.fpAnnotated, tbl.fpAnnotated$chr)
+      printf("done.")
+      }
+
+   if(!gene %in% rownames(inputTRN)){
+      warning(sprintf("gene '%s' not in TRN model '%s'", gene, trnName))
+      return(data.frame())
+      }
+
+   loc.info <- subset(humangene, genename==gene)[, c("chrom", "start", "end")]
+   start <- loc.info$start - promoterDist; if(start < 1) start <- 1
+   end <- start + promoterDist
+   chrom <- as.character(loc.info$chrom)
+
+   tbl.sub <- subset(tbls.fp[[chrom]], mfpStart >= start & mfpEnd <= end)
+   if(nrow(tbl.sub) == 0){
+      warning(sprintf("no footprints found in region %s:%d-%d", chrom, start, end))
+      return(data.frame())
+      }
+
+   tbl.sub <- cbind(tbl.sub, data.frame(gene=gene, trnName=trnName, promoterDist=promoterDist, stringsAsFactors=FALSE))
+   tbl.subTF <- merge(tbl.sub, tbl.motifToMultipleGenes, by.x="motifName", by.y="motif")
+   colnames(tbl.subTF)[match("tfs", colnames(tbl.subTF))] <- "TF"
+   tfs <- tbl.subTF$TF
+
+   tfs.in.model <- intersect(tfs, colnames(inputTRN))
+   tfs.with.nonzero.betas <- which(inputTRN[gene, tfs.in.model] != 0)
+
+   if(length(tfs.with.nonzero.betas) == 0)
+      return(data.frame())
+
+   tfs.in.model.non.zero <- names(tfs.with.nonzero.betas)
+   tbl.subTF <- subset(tbl.subTF, TF %in% tfs.in.model.non.zero)
+   beta <- as.numeric(inputTRN[gene, tbl.subTF$TF])
+   tbl.subTF$beta <- beta
+   name <- sprintf("%s|%s|%s|%s|%10.7f", tbl.subTF$gene, tbl.subTF$TF, tbl.subTF$trnName,
+                   tbl.subTF$motifName, tbl.subTF$beta)
+   tbl.subTF$name <- name
+
+   new.order <- c("chr",           "mfpStart",      "mfpEnd",          "name",    "beta",
+                  "motifName",     "motifStart",    "motifEnd",
+                  "motifScore",    "motifStrand",   "id",               "pvalue",
+                  "qvalue",        "sequence",      "experimentCount",  "fpStart",
+                  "fpEnd",         "fpScore",       "motifFpOverlap",
+                  "gene",          "trnName",       "promoterDist",
+                  "TF")
+    stopifnot(sort(new.order) == sort(colnames(tbl.subTF)))
+    tbl.subTF <- tbl.subTF[, new.order]
+    colnames(tbl.subTF)[2:3] <- c("start", "end")
+
+    invisible(tbl.subTF)
+
+} # tfGrabber.new
+#------------------------------------------------------------------------------------------------------------------------
 tfGrabber <- function(genelist, inputTRN, trnName=NULL, promoterDist=1000000, threshold=0.01)
 {
-   # input paras:
-   # gene list: a vector of genes such as MEF2C, ABCA7, CLU. In the format of RefSeq gene symbol
+  if(!exists("tbls.fp")) {
+     printf("splitting tbl.fpAnnotated into chromosome-specific tables...")
+     tbls.fp <<- split(tbl.fpAnnotated, tbl.fpAnnotated$chr)
+     printf("done.")
+     }
 
-   #genelist=c("MEF2C","ABCA7","CR1")
-   #genelist=rownames(trn.rtrim_isb_AD)
 
-
-   # requirements
-   #require(hash)
-   #require(GeneRegulationUtilities)
-
-  if (!exists("tbl.motifToMultipleGenes")){data(tbl.motifToMultipleGenes)}
-  if (!exists("tbl.fpAnnotated")){data(tbl.fpAnnotated)}
-  if (!exists("humangene")) {data(tbl.humangene3877)}
-
-  #trnName of each TRN
   if (is.null(trnName)){trnName="trn"}
-
-  # all TFs
-  alltfs=colnames(inputTRN)
-  allgenes=rownames(inputTRN)
-  nalltfs=length(alltfs)
-  genelist=intersect(genelist,allgenes)
-  if (length(genelist) == 0){warning("Input genes not in TRN")}
-
-  allTRN=list()
-  wholebed=data.frame()
-
-  count <- 0
-  for (gene in genelist){     # get single and summed TRN
-    count <- count + 1
-    if (!gene %in% rownames(inputTRN)) next;
-    singleTRN=inputTRN[gene,]
-    potential.regulator.count <- length(singleTRN)
-    keepCols=which(abs(singleTRN)>threshold)     # keep only TFs with absolute coefficients above threshold
-    singleTRN=singleTRN[keepCols]
-    printf("--- %s %d) %8s regulators above threshold %d/%d", trnName, count, gene,  length(singleTRN), potential.regulator.count)
-    # sumTRN == singleTRN in thse case of input is only one TRN
-    sumTRN=singleTRN
-
-    # get motif of each TF in the sumTRN
-    imotifs=subset(tbl.motifToMultipleGenes,tfs %in% names(sumTRN))
-    geneline=humangene[which(humangene$genename==gene),][1,]
-    ichr=as.character(geneline[,"chrom"])
-    startPosition=geneline[,"start"]-promoterDist
-    endPosition=geneline[,"start"]+promoterDist
-
-    tbl.thisgene <- subset(tbl.fpAnnotated,  chr==ichr & motifName %in% imotifs$motif & mfpStart >= startPosition & mfpEnd <= endPosition)
-    tbl.thisgene <- tbl.thisgene[, c("chr", "mfpStart", "mfpEnd", "motifName")]
-
-    if(nrow(tbl.thisgene) > 0 && nrow(imotifs) > 0){
-
-      # add regression coefficients
-      for (i in 1:nrow(tbl.thisgene)){
-         thismotif=tbl.thisgene[i,"motifName"]
-         itfs=subset(imotifs,motif==thismotif)
-         info.string <- "<html>";
-         gene.motif <- sprintf("%s(%s):&nbsp;%s", gene, trnName, thismotif)
-         info.string <- paste(info.string, gene.motif, sep="")
-         for (j in 1:nrow(itfs)){
-            tf.info <- sprintf("<br>%s:&nbsp;%04.2f", itfs[j, "tfs"], sumTRN[itfs[j,"tfs"]])
-            info.string <- paste(info.string, tf.info, sep="")
-            }
-         info.string <- paste(info.string, "</html>", sep="")
-         tbl.thisgene[i,"name"]=info.string
-         tbl.thisgene[i, "motifName"] <- thismotif
-         } # for i
-      thistrn=list()
-      thistrn$singleTRN=singleTRN
-      thistrn$sumTRN=sumTRN
-      allTRN[[gene]]=thistrn
-      wholebed=rbind(wholebed,tbl.thisgene)
-    } # if nrow
-  }  # for gene
-
+     alltfs=colnames(inputTRN)
+     allgenes=rownames(inputTRN)
+     nalltfs=length(alltfs)
+     genelist=intersect(genelist,allgenes)
+     if (length(genelist) == 0){warning("Input genes not in TRN")}
+     allTRN=list()
+     wholebed=data.frame()
+     count <- 0
+     for (gene in genelist){     # get single and summed TRN
+        count <- count + 1
+        if(!gene %in% rownames(inputTRN))
+           next;
+        singleTRN=inputTRN[gene,]
+        potential.regulator.count <- length(singleTRN)
+        keepCols=which(abs(singleTRN)>threshold)     # keep only TFs with absolute coefficients above threshold
+        singleTRN=singleTRN[keepCols]
+        printf("--- %s %d) %8s regulators above threshold %d/%d", trnName, count, gene,  length(singleTRN), potential.regulator.count)
+           # sumTRN == singleTRN in thse case of input is only one TRN
+        sumTRN=singleTRN
+           # get motif of each TF in the sumTRN
+        imotifs=subset(tbl.motifToMultipleGenes,tfs %in% names(sumTRN))
+        geneline=humangene[which(humangene$genename==gene),][1,]
+        ichr=as.character(geneline[,"chrom"])
+        startPosition=geneline[,"start"]-promoterDist
+        if(startPosition < 1) startPosition <- 1
+        endPosition=geneline[,"start"]+promoterDist
+        printf("sequence length: %8.2f", (endPosition-startPosition)/1000)
+        tbl.thisgene <- subset(tbls.fp[[ichr]], motifName %in% imotifs$motif &
+                                                mfpStart >= startPosition & mfpEnd <= endPosition)
+        #tbl.thisgene <- subset(tbl.fpAnnotated, chr==ichr & motifName %in% imotifs$motif &
+        #                                        mfpStart >= startPosition & mfpEnd <= endPosition)
+        #browser()
+        tbl.thisgene <- tbl.thisgene[, c("chr", "mfpStart", "mfpEnd", "motifName")]
+        tbl.thisGeneWithTFs <- merge(tbl.thisgene, tbl.motifToMultipleGenes, by.x="motifName", by.y="motif")
+        tbl.thisGeneWithTFS.collapsed <- aggregate(tfs~chr+mfpStart+mfpEnd+motifName, c, data=tbl.thisGeneWithTFs)
+        #x <- merge(tbl.thisgene, tbl.motifToMultipleGenes, by.x="motifName", by.y="motif")
+        # xxx <- aggregate(tfs~chr+mfpStart+mfpEnd, c, data=xx)
+        printf("about to loop through %d rows in tbl.thisgene", nrow(tbl.thisgene))
+        if(nrow(tbl.thisgene) > 0 && nrow(imotifs) > 0){ # add regression coefficients
+           for (i in 1:nrow(tbl.thisgene)){
+              thismotif=tbl.thisgene[i,"motifName"]
+              indices <- which(imotifs$motif==thismotif)
+              itfs <- imotifs[indices,]
+              #browser()
+              info.string <- "<html>";
+              gene.motif <- sprintf("%s(%s):&nbsp;%s", gene, trnName, thismotif)
+              info.string <- paste(info.string, gene.motif, sep="")
+              #printf("about to loop over %d motifs", nrow(itfs))
+              for (j in 1:nrow(itfs)){
+                 tf.info <- sprintf("<br>%s:&nbsp;%04.2f", itfs[j, "tfs"], sumTRN[itfs[j,"tfs"]])
+                 info.string <- paste(info.string, tf.info, sep="")
+                 } # for j
+              info.string <- paste(info.string, "</html>", sep="")
+              tbl.thisgene[i,"name"]=info.string
+              tbl.thisgene[i, "motifName"] <- thismotif
+              } # for i
+           thistrn=list()
+           thistrn$singleTRN=singleTRN
+           thistrn$sumTRN=sumTRN
+           allTRN[[gene]]=thistrn
+           wholebed=rbind(wholebed,tbl.thisgene)
+           } # if nrow
+        } # for gene
 
   result <- list(TRN=allTRN,bed4igv=wholebed)
 

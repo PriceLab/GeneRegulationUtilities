@@ -30,6 +30,8 @@ runTests <- function()
    test_findSNPsNearFootprints()
    test_LXH1_matching()
    test_tfGrabber()
+   test_tfGrabber.new()
+   test_run.tfGrabber.new()
    test_intersectingLocs()
    test_displayGWAS()
    test_intersectMarietSnpsWithGWAS()
@@ -351,14 +353,117 @@ test_tfGrabber <- function()
    var.name.trn.rtrim <- grep("^trn.rtrim", var.names, value=TRUE)
    eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
    genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1"))
-   promoterDistance <- 10000
+   promoterDistance <- 1000000
 
    time.info <- system.time(x <- tfGrabber(genes.of.interest, trn.rtrim,
                                            trnName="demo", promoterDist=promoterDistance))
+   print(time.info)
    checkTrue(nrow(x$bed4igv) >= 10)
    checkEquals(length(x$TRN), length(genes.of.interest))
 
 } # test_tfGrabber
+#------------------------------------------------------------------------------------------------------------------------
+test_tfGrabber.new <- function()
+{
+   printf("--- test_tfGrabber.new")
+
+   dir <- system.file(package="snpFoot", "extdata")
+   checkTrue(file.exists(dir))
+   file <- "demoTRN.RData"
+   full.path <- file.path(dir, file)
+   checkTrue(file.exists(full.path))
+   var.names <- load(full.path, envir=.GlobalEnv)
+   var.name.trn.rtrim <- grep("^trn.rtrim", var.names, value=TRUE)
+   eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
+
+   genes.of.interest <- intersect(rownames(trn.rtrim), c("MEF2C","ABCA7","CR1"))
+   promoterDistance <- 1000000
+
+   x <- tfGrabber.new("MEF2C", trn.rtrim, trnName="demo", promoterDist=10)
+   checkEquals(dim(x), c(0,0))
+
+   x <- tfGrabber.new("MEF2C", trn.rtrim, trnName="demo", promoterDist=10000)
+   checkEquals(dim(x), c(4, 23))
+
+   x <- tfGrabber.new("MEF2C", trn.rtrim, trnName="demo", promoterDist=1000000)
+   checkEquals(dim(x), c(605, 23))
+
+   x <- tfGrabber.new("CR1", trn.rtrim, trnName="demo", promoterDist=1000000)
+   checkEquals(dim(x), c(0,0))
+
+   xx <- lapply(c("MEF2C", "ABCA7"), function(gene) tfGrabber.new(gene, trn.rtrim, trnName="demo", promoterDist=1e6))
+   xxx <- do.call("rbind", xx)
+
+   genes.44 <-  c("ABCA7", "APOE", "BIN1", "CASS4", "CD2AP", "CELF1", "CLU",
+                  "CR1", "EPHA1", "FERMT2", "HLA", "INPP5D", "MEF2C", "MS4A6A",
+                  "NME8", "PICALM", "PTK2B", "SLC24A4/RIN3", "SORL1", "ZCWWPW1",
+                  "ABI3", "IRF8", "MS4A14", "MS4A4A", "MS4A7", "PLCG1", "PLCG2",
+                  "TGFB1", "TREM2", "TTC3", "UNC5C", "PILRB", "SLC24A4",
+                  "FASLG", "TNFSF18", "PIEZO2", "NAPG", "APCDD1", "DNMBP",
+                  "APP", "BACE1", "BACE2", "PSEN1", "PSEN2")
+     # 5 seconds elapsed
+   time.info <- system.time(fp.44.list <- lapply(genes.44, function(gene) tfGrabber.new(gene, trn.rtrim, trnName="demo", promoterDist=1e6)))
+   lapply(fp.44.list, length)
+   tbl.fp.44 <- do.call("rbind", fp.44.list)
+   dim(tbl.fp.44) # [1] 8470   23
+   table(tbl.fp.44$gene)
+
+     #  ABCA7    ABI3  APCDD1    APOE   BACE1   BACE2    BIN1   CASS4   CD2AP   CELF1   DNMBP   EPHA1
+     #    233     183     432     676    1117      57      18      62     167     177      57      30
+     # FERMT2  INPP5D   MEF2C  MS4A14  MS4A4A  MS4A6A    NAPG  PIEZO2   PLCG1   PLCG2   PSEN1   PSEN2
+     #    411     185     605     122      16      49     445     181     121     158     453     177
+     #  PTK2B SLC24A4   SORL1   TGFB1   TREM2    TTC3   UNC5C
+     #    300      84     218    1435      46     148     107
+
+} # test_tfGrabber.new
+#------------------------------------------------------------------------------------------------------------------------
+test_run.tfGrabber.new <- function()
+{
+   printf("--- test_run.tfGrabber.new")
+   load(system.file(package="PrivateCoryData", "extdata/trn10.genes44/genes.44.RData"))
+   checkTrue(exists("genes.44"))
+   checkEquals(length(genes.44), 44)
+
+   dir <- system.file(package="snpFoot", "extdata")
+   checkTrue(file.exists(dir))
+
+   file <- "demoTRN.RData"
+   full.path <- file.path(dir, file)
+   checkTrue(file.exists(full.path))
+   var.names <- load(full.path, envir=.GlobalEnv)
+   var.name.trn.rtrim <- grep("^trn.rtrim", var.names, value=TRUE)
+   eval(parse(text=sprintf("trn.rtrim <<- %s", var.name.trn.rtrim[1])))
+   checkEquals(dim(trn.rtrim), c(11822, 500))
+
+   genes.missing <- setdiff(genes.44, rownames(trn.rtrim))
+   genes.missing
+      # [1] "APP"     "CLU"     "CR1"     "FASLG"   "HLA"     "IRF8"    "MS4A7"   "NME8"    "PICALM"  "PILRB"   "TNFSF18" "ZCWWPW1"
+   intersect(genes.missing, colnames(trn.rtrim)) # [1] "IRF8"
+   genes.of.interest <- intersect(rownames(trn.rtrim), genes.44)   # 32
+
+   sqlite.fileName <- file.path(getwd(), "grabber.sqlite")
+   if(file.exists(sqlite.fileName))
+       unlink(sqlite.fileName)
+
+   checkTrue(!file.exists(sqlite.fileName))
+   sql.tableName <- "tfFootprints"
+   tbl.fpDemo <- run.tfGrabber(genes.of.interest, trn.rtrim, "trnDemo", sqlite.fileName, sql.tableName)
+   db <- dbConnect(dbDriver("SQLite"), sqlite.fileName)
+   checkTrue(file.exists(sqlite.fileName))
+
+   result <- dbGetQuery(db, sprintf("select count(*) from %s", sql.tableName))
+   rowCount <- result[1,1]
+   checkTrue(rowCount > 8000)
+   checkTrue(rowCount < 9000)
+
+   tbl <- dbGetQuery(db, sprintf("select * from %s limit 3", sql.tableName))
+   checkEquals(dim(tbl), c(3, 24))
+   checkEquals(sort(colnames(tbl)), c("TF", "beta", "chr", "end", "experimentCount", "fpEnd", "fpScore",
+                                      "fpStart", "gene", "id", "motifEnd", "motifFpOverlap", "motifName",
+                                      "motifScore", "motifStart", "motifStrand", "name", "promoterDist",
+                                      "pvalue", "qvalue", "row_names", "sequence", "start", "trnName"))
+
+} # test_run.tfGrabber.new
 #------------------------------------------------------------------------------------------------------------------------
 test_intersectingLocs <- function()
 {
