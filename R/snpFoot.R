@@ -167,8 +167,7 @@ combineBedTables <- function(filenames)
   seqinfo(gr) <- seqinfo(TxDb.Hsapiens.UCSC.hg38.knownGene)[names(seqinfo(gr))]
   seqlevels(gr) <- seqlevels(sortSeqlevels(seqinfo(gr)))
   gr <- sort(gr)
-  tbl.out <- as.data.frame(gr)[, c("seqnames", "start", "end", "name")]
-  colnames(tbl.out) <- c("chr", "start", "end", "name")
+  tbl.out <- data.frame(chr=seqnames(gr), start=start(gr), end=end(gr), mcols(gr)[, "name"])
 
   invisible(tbl.out)
 
@@ -176,7 +175,8 @@ combineBedTables <- function(filenames)
 #------------------------------------------------------------------------------------------------------------------------
 run.tfGrabber <- function(genes, trn, trnName, sqlite.fileName, sql.tableName)
 {
-   x <- lapply(genes, function(gene) tfGrabber.new(gene, trn, trnName="demo", promoterDist=1e6))
+   #browser()
+   x <- lapply(genes, function(gene) tfGrabber.new(gene, trn, trnName=trnName, promoterDist=1e6))
    lapply(x, length)
    tbl.fp <- do.call("rbind", x)
    dim(tbl.fp) # [1] 8470   23
@@ -201,6 +201,16 @@ tfGrabber.new <- function(gene, inputTRN, trnName, promoterDist)
       }
 
    loc.info <- subset(humangene, genename==gene)[, c("chrom", "start", "end")]
+   if(nrow(loc.info) == 0){  # some genes are missing, eg ACBD6
+      printf("no loc.info for %s, skipping", gene)
+      return(data.frame())
+      }
+
+       # if there are multiple entries, take just the first.  see AATF
+   loc.info <- loc.info[1,]
+   #printf("--- loc.info for %s", gene)
+   #print(loc.info)
+
    start <- loc.info$start - promoterDist; if(start < 1) start <- 1
    end <- start + promoterDist
    chrom <- as.character(loc.info$chrom)
@@ -208,12 +218,12 @@ tfGrabber.new <- function(gene, inputTRN, trnName, promoterDist)
    if(!grepl("^chr", chrom))
       chrom <- sprintf("chr", chrom)
 
+   # printf("chromosome for %s: %s (%d)", gene, chrom, nchar(chrom))
+   #browser()
    if(nchar(chrom) > 5){
       printf("unexpected chromosome name for %s: %s, skipping", gene, chrom)
       return(data.frame())
       }
-
-   printf("chromosome for %s: %s", gene, chrom)
 
    tbl.sub <- subset(tbls.fp[[chrom]], mfpStart >= start & mfpEnd <= end)
    if(nrow(tbl.sub) == 0){
