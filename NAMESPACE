@@ -9,4 +9,12 @@ export(
     displayADgwas,
     combineBedTables,
     runLift.hg19to38
-    )
+)
+
+import(GenomicRanges)
+import(igvR)
+import(PrivateCoryData)
+import(RSQLite)
+import(rtracklayer)
+import(VariantAnnotation)
+

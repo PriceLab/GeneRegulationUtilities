@@ -4,19 +4,22 @@ printf <- function(...) print(noquote(sprintf(...)))
 .onLoad <- function(libname, pkgname)
 {
    printf("snpFoot package initializations:");
+
    printf("   loading tbl.fpAnnotated")
-   data(tbl.fpAnnotated)  # may take 30 seconds or so: > 4M DNAse I footprints with TF motifs
+       # may take 30 seconds or so: > 4M DNAse I footprints with TF motifs
+   load(system.file(package="PrivateCoryData", "data", "tbl.fpAnnotated.RData"))
 
    printf("   loading %s", "tbl.motifToMultipleGenes")
-   data(tbl.motifToMultipleGenes)  # much quicker: maps motif identifiers to gene symbols (from Seth)
+   load(system.file(package="PrivateCoryData", "data", "tbl.motifToMultipleGenes.RData"))
+
    printf("   loading tbl.gwasADsnpsInFp.05pval.igap2013")
-   data(tbl.gwasADsnpsInFp.05pval.igap2013)
+   load(system.file(package="PrivateCoryData", "data", "tbl.gwasADsnpsInFp.05pval.igap2013.RData"))
 
    printf("   loading tbl.gwas.level_1 AD, igap 2013")
-   data(tbl.gwas.level_1)
+   load(system.file(package="PrivateCoryData", "data", "tbl.gwas.level_1.RData"))
 
    printf("   loading tbl.humangene3877")
-   data(tbl.humangene3877)
+   load(system.file(package="PrivateCoryData", "data", "tbl.humangene3877.RData"))
 
 } # .onLoad
 #------------------------------------------------------------------------------------------------------------------------
