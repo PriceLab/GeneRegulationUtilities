@@ -8,7 +8,8 @@ export(
     displaySnps,
     displayADgwas,
     combineBedTables,
-    runLift.hg19to38
+    runLift.hg19to38,
+    selectBestAmongDuplicates
 )
 
 import(GenomicRanges)

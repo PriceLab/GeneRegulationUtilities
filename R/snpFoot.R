@@ -355,5 +355,29 @@ displaySnps <- function(igv, chrom, locs, name)
 
 } # displaySnps
 #------------------------------------------------------------------------------------------------------------------------
+selectBestAmongDuplicates <- function(tbl)
+{
+   columns.of.interest <- c("chr", "snp", "tf_name")
+   stopifnot(all(columns.of.interest %in% colnames(tbl)))
+
+   tbl.core <- unique(tbl[, c("chr", "snp", "tf_name")])
+   tbl.min <- data.frame()
+
+   for(r in 1:nrow(tbl.core)){
+      chrom <- tbl.core[r, "chr"]
+      snp.loc <- tbl.core[r, "snp"]
+      tf <- tbl.core[r, "tf_name"]
+      tbl.sub <- subset(tbl, chr==chrom & snp==snp.loc & tf_name==tf)
+      if(nrow(tbl.sub) > 1){
+         deleters <- which(tbl.sub$pval != min(tbl.sub$pval))
+         tbl.sub <- tbl.sub[-deleters,]
+         } # if duplicates found (and then eliminated)
+      tbl.min <- rbind(tbl.min, tbl.sub)
+      } # for r
+
+   tbl.min
+
+} # selectBestAmongDuplicates
+#------------------------------------------------------------------------------------------------------------------------
 
 

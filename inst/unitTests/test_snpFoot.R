@@ -3,6 +3,8 @@ library(snpFoot);
 library(PrivateCoryData)
 library(igvR)
 #------------------------------------------------------------------------------------------------------------------------
+Sys.setlocale("LC_ALL", "C")
+#------------------------------------------------------------------------------------------------------------------------
 printf <- function(...) print(noquote(sprintf(...)))
 #------------------------------------------------------------------------------------------------------------------------
 if(!exists("tbl.fpAnnotated")){
@@ -37,6 +39,7 @@ runTests <- function()
    test_intersectMarietSnpsWithGWAS()
    test_displayAllEncodeFootprints()
    test_runLift.hg19to38()
+   test_selectBestAmongDuplicates()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -458,10 +461,10 @@ test_run.tfGrabber.new <- function()
 
    tbl <- dbGetQuery(db, sprintf("select * from %s limit 3", sql.tableName))
    checkEquals(dim(tbl), c(3, 24))
-   checkEquals(sort(colnames(tbl)), c("TF", "beta", "chr", "end", "experimentCount", "fpEnd", "fpScore",
-                                      "fpStart", "gene", "id", "motifEnd", "motifFpOverlap", "motifName",
-                                      "motifScore", "motifStart", "motifStrand", "name", "promoterDist",
-                                      "pvalue", "qvalue", "row_names", "sequence", "start", "trnName"))
+   checkEquals(sort(colnames(tbl)), sort(c("TF", "beta", "chr", "end", "experimentCount", "fpEnd", "fpScore",
+                                           "fpStart", "gene", "id", "motifEnd", "motifFpOverlap", "motifName",
+                                           "motifScore", "motifStart", "motifStrand", "name", "promoterDist",
+                                           "pvalue", "qvalue", "row_names", "sequence", "start", "trnName")))
 
 } # test_run.tfGrabber.new
 #------------------------------------------------------------------------------------------------------------------------
@@ -560,6 +563,16 @@ test_runLift.hg19to38 <- function()
     if(file.exists("expected.output.file"))
        unlink(expected.output.file)
 
-
 } # test_runLift.hg19to38
 #------------------------------------------------------------------------------------------------------------------------
+test_selectBestAmongDuplicates <- function()
+{
+    printf("--- test_selectBestAmongDuplicates")
+    file.path <- system.file(package="snpFoot", "extdata", "footprints.tbl.withDups.RData")
+    load(file.path)
+    tbl.best <- selectBestAmongDuplicates(tbl.withDups)
+    checkEquals(nrow(tbl.best), 3)
+
+} # test_selectBestAmongDuplicates
+#------------------------------------------------------------------------------------------------------------------------
+if(!interactive()) runTests()
