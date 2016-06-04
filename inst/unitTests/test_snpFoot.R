@@ -567,11 +567,11 @@ test_runLift.hg19to38 <- function()
 #------------------------------------------------------------------------------------------------------------------------
 test_selectBestAmongDuplicates <- function()
 {
-    printf("--- test_selectBestAmongDuplicates")
-    file.path <- system.file(package="snpFoot", "extdata", "footprints.tbl.withDups.RData")
-    load(file.path)
-    tbl.best <- selectBestAmongDuplicates(tbl.withDups)
-    checkEquals(nrow(tbl.best), 3)
+   printf("--- test_selectBestAmongDuplicates")
+   file.path <- system.file(package="snpFoot", "extdata", "footprints.tbl.withDups.RData")
+   load(file.path)
+   tbl.best <- selectBestAmongDuplicates(tbl.fpoi.snp)
+   checkEquals(nrow(tbl.best), 6)
 
 } # test_selectBestAmongDuplicates
 #------------------------------------------------------------------------------------------------------------------------

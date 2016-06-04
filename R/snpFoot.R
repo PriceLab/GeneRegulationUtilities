@@ -360,7 +360,7 @@ selectBestAmongDuplicates <- function(tbl)
    columns.of.interest <- c("chr", "snp", "tf_name")
    stopifnot(all(columns.of.interest %in% colnames(tbl)))
 
-   tbl.core <- unique(tbl[, c("chr", "snp", "tf_name")])
+   tbl.core <- unique(tbl[, columns.of.interest])
    tbl.min <- data.frame()
 
    for(r in 1:nrow(tbl.core)){
@@ -371,7 +371,9 @@ selectBestAmongDuplicates <- function(tbl)
       if(nrow(tbl.sub) > 1){
          deleters <- which(tbl.sub$pval != min(tbl.sub$pval))
          tbl.sub <- tbl.sub[-deleters,]
-         } # if duplicates found (and then eliminated)
+         if(nrow(tbl.sub) > 1)
+            tbl.sub <- tbl.sub[1,]
+        } # if duplicates found (and then eliminated)
       tbl.min <- rbind(tbl.min, tbl.sub)
       } # for r
 
