@@ -1,8 +1,8 @@
 Package: snpFoot
 Type: Package
 Title: snpFoot
-Version: 1.0.49
-Date: 2016-06-04
+Version: 1.0.50
+Date: 2016-06-16
 Author: Paul Shannon
 Maintainer:  <pshannon@systemsbiology.org>
 Depends: R (>= 3.2.3),  GenomicRanges, PrivateCoryData, igvR, VariantAnnotation, rtracklayer (>= 1.30.3), RSQLite

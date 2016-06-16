@@ -1,0 +1,93 @@
+How to install the Postgress databases and tables needed by TReNA.
+Paul Shannon, pshannon@systemsbiology.org
+
+The databases and schema are evolving things.  That which is described here
+will be improved upon.
+
+1) create a "fill" directory: a workspace to hold the tab-delimited files
+which, though large, load into postgres quite quickly.
+
+   cd your-path-to-postgressFill
+
+2) create four subdirectories:
+      gtf/            # holds a database version of Homo_sapiens.GRCh38.84.chr.gtf
+      lymphoblast/    # footprint files for seth's lymphoblast study
+      motifsgenes/    # seth & cory's mapping of motif to transcription factor
+      wholeBrain/     # cory's run of wellington et al for 12 brain tissues
+
+3) overview
+We currently three two logical databases within the postgres instance:
+  a) gtf, for gene annotations from Ensembl
+  b) wholeBrain:
+  c) lymphoblast: one table for footprints from seth's lymphoblast study, one table for motifsgenes
+
+Thus, in poor datababase style, the motifsgenes table is duplicated.  This permits easy joins between
+footprints and motfif and genes.
+
+The wholeBrain and lymphoblast databases are interchangeable.  Application code specifies one or the
+other to be used as candidate TFs are selected for use with the TReNA solvers (lasso, bayesSpike, randomForest).
+
+The gtf database, named after the genome build (currently hg38), has well-respected annotations, by
+chromosomal location, for many (many!) different kinds of genomic feature.
+
+4) create the schema of the gtf/hg38 database table
+  psql hg38
+  hg38> create table gtf(chr varchar, start int, endpos int, score varchar, strand varchar,
+                         frame varchar, moleculeType varchar, gene_id varchar,
+                         gene_version varchar,
+                         gene_name  varchar,
+                         gene_source  varchar,
+                         gene_biotype  varchar,
+                         havana_gene  varchar,
+                         havana_gene_version  varchar,
+                         transcript_id  varchar,
+                         transcript_version  varchar,
+                         transcript_name  varchar,
+                         transcript_source  varchar,
+                         transcript_biotype  varchar,
+                         havana_transcript  varchar,
+                         havana_transcript_version  varchar,
+                         tag  varchar,
+                         transcript_support_level  varchar,
+                         exon_number  varchar,
+                         exon_id  varchar,
+                         exon_version  varchar,
+                         ccds_id  varchar,
+                         protein_id varchar,
+                         protein_version  varchar,
+                         annotation varchar);
+
+5) fill the gtf table in the hg38 database
+  \c hg38
+  \copy gtf from 'ensembl-gtf.tsv' delimiter E'\t' CSV;
+  COPY 2568100
+  hg38=>
+    GRANT connect on database "hg38" to trena;
+    GRANT select on all tables in SCHEMA public to trena;
+
+6) create the schema of the wholeBrain database, which has two tables: footprins and motifsgenes
+  create table footprints(chr varchar,  mfpStart int, mfpEnd int, strand char(1),
+                           motifName varchar,  motifLength int, footprintLength int,
+                           score real, pval real, qval real,  sequence varchar);
+
+7) fill the footprints table
+   \copy footprints from 'fpAnnotated.tsv' delimiter E'\t' CSV;
+      COPY 4692138
+  wholeBrain> GRANT select on all tables in SCHEMA public to trena;
+
+8) create the motifsgenes table in the wholeBrain database
+
+   create table motifsgenes(motif varchar, tf_name varchar, tf_ensg varchar);
+
+9) fill from the simple 2-column file:
+
+    \copy motifsgenes from 'motifGenes.tsv' delimiter E'\t' CSV;
+    \copy motifsgenes from 'motifToMultipleGenes.tsv' delimiter E'\t' CSV;
+    COPY 9017
+  GRANT select on all tables in SCHEMA public to trena;
+
+
+
+
+
+
